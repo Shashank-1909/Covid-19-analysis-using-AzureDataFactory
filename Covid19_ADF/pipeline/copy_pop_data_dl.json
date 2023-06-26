@@ -1,0 +1,160 @@
+{
+	"name": "copy_pop_data_dl",
+	"properties": {
+		"activities": [
+			{
+				"name": "pop_data_presence_validation",
+				"description": "to validate whether the data is present in the required location or not .",
+				"type": "Validation",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "population_gz_ds",
+						"type": "DatasetReference"
+					},
+					"timeout": "1.00:00:00",
+					"sleep": 1000
+				}
+			},
+			{
+				"name": "check_number_of_columns",
+				"description": "It is desired that the copy activity should take place on when it is found that the number of columns in the csv file is 13.",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "pop_data_presence_validation",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "population_gz_ds",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"columnCount"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If_condition_meets",
+				"description": "The if condition will check whether the number of columns in the table present in the csv file is 13 or not.",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "check_number_of_columns",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('check_number_of_columns').output.columnCount,13)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "if_condition_false",
+							"description": "This activity will raise an error message when the condition does not match that is the columns present in the table are not equal to 13",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": "The number of columns do not match to the number 13.",
+								"errorCode": "100"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "copy_data_to_dl",
+							"description": "This activity unzips the file resent in the azure blob storage and saves it in csv format in the data lake.",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.00:02:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "population_gz_ds",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DelimitedText1",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "ingest_to_raw_container"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-22T07:29:17Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

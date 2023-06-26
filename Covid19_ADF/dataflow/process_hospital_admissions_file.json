@@ -1,0 +1,248 @@
+{
+	"name": "process_hospital_admissions_file",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "hospital_admissions_ds",
+						"type": "DatasetReference"
+					},
+					"name": "Covid19HospitalAdmissionSource",
+					"description": "The source represents the hopital_admissions.csv file."
+				},
+				{
+					"dataset": {
+						"referenceName": "country_lookup_ds",
+						"type": "DatasetReference"
+					},
+					"name": "LookupCountryDataSource",
+					"description": "This data source represent the country_lookup.csv file."
+				},
+				{
+					"dataset": {
+						"referenceName": "date_lookup_ds",
+						"type": "DatasetReference"
+					},
+					"name": "LookupDate",
+					"description": "This Source refers to the lookup_date.csv file which can be referenced for the date related tasks."
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "daily_hospital_count_ds",
+						"type": "DatasetReference"
+					},
+					"name": "SinkDailyHospitalEntries",
+					"description": "The sink refers to the placement of the placement of the processed daily_hospital_entries to the desired file_holder"
+				},
+				{
+					"dataset": {
+						"referenceName": "sink_weekly_hospital_admisssions_ds",
+						"type": "DatasetReference"
+					},
+					"name": "SinkWeeklyHospitalAdmissions",
+					"description": "This sink will determine the location of final processed data."
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddingRequiredColumns",
+					"description": "This dataflow function adds population, country_code_2_digit, country_code_3_digit to the data"
+				},
+				{
+					"name": "SelectReleventColumns",
+					"description": "With this functionality the relevant columns will be selected."
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "PivotIndicatorAndValue",
+					"description": "The Columns after pivot will represent the daily hospital occupancy count an daily icu occupancy count"
+				},
+				{
+					"name": "SelectRelevantColumns",
+					"description": "The Non relevant columns will be deselected."
+				},
+				{
+					"name": "SortAccordingly",
+					"description": "The data is sorted according to the name of the country and the date"
+				},
+				{
+					"name": "AggregateDateTable"
+				},
+				{
+					"name": "LookupDateRelatedColumn",
+					"description": "This process will add start of week and end of week columns to the data."
+				},
+				{
+					"name": "PivotIndicatorAndValue1"
+				},
+				{
+					"name": "SelectRelevantColumns1",
+					"description": "The columns which we want to carry forward will be selected"
+				},
+				{
+					"name": "AlterColumnName",
+					"description": "admissions per 100k value, Weekly new ICU admissions per 100k value'"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          country as string,",
+				"          indicator as string,",
+				"          date as date,",
+				"          year_week as string,",
+				"          value as double,",
+				"          source as string,",
+				"          url as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     ignoreNoFilesFound: false) ~> Covid19HospitalAdmissionSource",
+				"source(output(",
+				"          country as string,",
+				"          country_code_2_digit as string,",
+				"          country_code_3_digit as string,",
+				"          continent as string,",
+				"          population as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     ignoreNoFilesFound: false) ~> LookupCountryDataSource",
+				"source(output(",
+				"          date_key as long,",
+				"          date as date,",
+				"          year as string,",
+				"          month as short,",
+				"          day as short,",
+				"          day_name as string,",
+				"          day_of_year as short,",
+				"          week_of_month as short,",
+				"          week_of_year as string,",
+				"          month_name as string,",
+				"          year_month as integer,",
+				"          year_week as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     ignoreNoFilesFound: false) ~> LookupDate",
+				"Covid19HospitalAdmissionSource, LookupCountryDataSource lookup(Covid19HospitalAdmissionSource@country == LookupCountryDataSource@country,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> AddingRequiredColumns",
+				"AddingRequiredColumns select(mapColumn(",
+				"          country = Covid19HospitalAdmissionSource@country,",
+				"          country_code_2_digit,",
+				"          country_code_3_digit,",
+				"          population,",
+				"          date,",
+				"          year_week,",
+				"          indicator,",
+				"          value,",
+				"          source",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectReleventColumns",
+				"SelectReleventColumns split(indicator == 'Daily hospital occupancy' || indicator == 'Daily ICU occupancy',",
+				"     disjoint: false) ~> split1@(DailyEntriesInHospitals, WeeklyEntriesInhospital)",
+				"split1@DailyEntriesInHospitals pivot(groupBy(country,",
+				"          country_code_2_digit,",
+				"          country_code_3_digit,",
+				"          population,",
+				"          date,",
+				"          source,",
+				"          year_week),",
+				"     pivotBy(indicator, ['Daily hospital occupancy', 'Daily ICU occupancy']),",
+				"     count = sum(value),",
+				"     columnNaming: '$N_$V',",
+				"     lateral: true) ~> PivotIndicatorAndValue",
+				"PivotIndicatorAndValue select(mapColumn(",
+				"          country,",
+				"          country_code_2_digit,",
+				"          country_code_3_digit,",
+				"          population,",
+				"          reported_date = date,",
+				"          source,",
+				"          count_daily_hospital_occupancy = {count_Daily hospital occupancy},",
+				"          count_daily_ICU_occupancy = {count_Daily ICU occupancy}",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectRelevantColumns",
+				"SelectRelevantColumns sort(asc(country, true),",
+				"     asc(reported_date, true),",
+				"     caseInsensitive: true) ~> SortAccordingly",
+				"LookupDate aggregate(groupBy(week_year1 = year+'-W'+lpad(week_of_year,2,'0')),",
+				"     start_of_week = min(date),",
+				"          end_of_week = max(date)) ~> AggregateDateTable",
+				"split1@WeeklyEntriesInhospital, AggregateDateTable lookup(year_week == week_year1,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LookupDateRelatedColumn",
+				"SelectRelevantColumns1 pivot(groupBy(country,",
+				"          country_code_2_digit,",
+				"          country_code_3_digit,",
+				"          population,",
+				"          year_week,",
+				"          source,",
+				"          start_of_week,",
+				"          end_of_week),",
+				"     pivotBy(indicator, ['Weekly new hospital admissions per 100k', 'Weekly new ICU admissions per 100k']),",
+				"     value = sum(value),",
+				"     columnNaming: '$V $N',",
+				"     lateral: true) ~> PivotIndicatorAndValue1",
+				"LookupDateRelatedColumn select(mapColumn(",
+				"          country,",
+				"          country_code_2_digit,",
+				"          country_code_3_digit,",
+				"          population,",
+				"          year_week,",
+				"          indicator,",
+				"          value,",
+				"          source,",
+				"          start_of_week,",
+				"          end_of_week",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectRelevantColumns1",
+				"PivotIndicatorAndValue1 select(mapColumn(",
+				"          country,",
+				"          country_code_2_digit,",
+				"          country_code_3_digit,",
+				"          population,",
+				"          year_week,",
+				"          start_of_week,",
+				"          end_of_week,",
+				"          weekly_new_ICU_admissions_per_100k = {Weekly new ICU admissions per 100k value},",
+				"          weekly_new_hospital_admissions_per_100k = {Weekly new hospital admissions per 100k value},",
+				"          source",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> AlterColumnName",
+				"SortAccordingly sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     truncate: true,",
+				"     umask: 0764,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1) ~> SinkDailyHospitalEntries",
+				"AlterColumnName sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     truncate: true,",
+				"     umask: 0764,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SinkWeeklyHospitalAdmissions"
+			]
+		}
+	}
+}

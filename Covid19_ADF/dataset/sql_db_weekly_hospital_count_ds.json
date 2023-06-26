@@ -1,0 +1,64 @@
+{
+	"name": "sql_db_weekly_hospital_count_ds",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sql_db_ls",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "move_data_to_sql_db"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "country",
+				"type": "varchar"
+			},
+			{
+				"name": "country_code_2_digit",
+				"type": "varchar"
+			},
+			{
+				"name": "country_code_3_digit",
+				"type": "varchar"
+			},
+			{
+				"name": "population",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "year_week",
+				"type": "varchar"
+			},
+			{
+				"name": "start_of_week",
+				"type": "date"
+			},
+			{
+				"name": "end_of_week",
+				"type": "date"
+			},
+			{
+				"name": "weekly_new_ICU_admissions_per_100k",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "weekly_new_hospital_admissions_per_100k",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "source",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "covid_19_schema",
+			"table": "weekly_hospital_admissions"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

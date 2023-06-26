@@ -1,0 +1,72 @@
+{
+	"name": "insert_cases_and_deaths_into_db",
+	"properties": {
+		"activities": [
+			{
+				"name": "processed_cases_and_deaths_to_sqldb",
+				"description": "this activity will make the processed cases and deaths file sit into table covid_19_schema.cases_and_deaths table",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:05:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "covid19_files/cases_and_deaths",
+							"wildcardFileName": "*",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "Truncate table covid_19_schema.cases_and_deaths",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"parallelCopies": 1,
+					"enableSkipIncompatibleRow": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "sink_cases_and_deaths_ds",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "sql_db_cases_and_deaths_ds",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "insert_processed_files_to_database tables"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-22T12:56:38Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

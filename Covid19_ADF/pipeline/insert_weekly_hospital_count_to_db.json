@@ -1,0 +1,70 @@
+{
+	"name": "insert_weekly_hospital_count_to_db",
+	"properties": {
+		"activities": [
+			{
+				"name": "processed_weekly_hospital_count_to_sqldb",
+				"description": "this activity will make the processed cases and deaths file sit into table covid_19_schema.weekly_hospital_admissions table",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:05:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "covid19_files/weekly_hospital",
+							"wildcardFileName": "*",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "Truncate table covid_19_schema.weekly_hospital_admissions",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "sink_weekly_hospital_admisssions_ds",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "sql_db_weekly_hospital_count_ds",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "insert_processed_files_to_database tables"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-22T07:29:17Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

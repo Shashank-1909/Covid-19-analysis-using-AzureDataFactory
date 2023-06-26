@@ -1,0 +1,27 @@
+{
+	"name": "daily_hospital_count_ds",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "azure_data_lake_ls",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "raw_datasets"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "covid19_files/daily_hospital_count",
+				"fileSystem": "processed"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

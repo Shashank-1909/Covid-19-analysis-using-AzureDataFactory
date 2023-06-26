@@ -1,0 +1,35 @@
+{
+	"name": "insert_testing_to_db_tr",
+	"properties": {
+		"description": "This trigger fires the pipeline that inserts processed testing file to schema_covid_19.testing table.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipeline": {
+			"pipelineReference": {
+				"referenceName": "insert_testing_to_db",
+				"type": "PipelineReference"
+			}
+		},
+		"type": "TumblingWindowTrigger",
+		"typeProperties": {
+			"frequency": "Hour",
+			"interval": 24,
+			"startTime": "2023-06-23T00:00:00Z",
+			"delay": "00:00:00",
+			"maxConcurrency": 50,
+			"retryPolicy": {
+				"intervalInSeconds": 30
+			},
+			"dependsOn": [
+				{
+					"type": "TumblingWindowTriggerDependencyReference",
+					"offset": "0.00:00:00",
+					"referenceTrigger": {
+						"referenceName": "execute_testing_datafow_trigger",
+						"type": "TriggerReference"
+					}
+				}
+			]
+		}
+	}
+}

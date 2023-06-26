@@ -1,0 +1,38 @@
+{
+	"name": "file_list_ds",
+	"properties": {
+		"description": "The dataset points to the file which contains url pertaining to the covid 19 related data. ",
+		"linkedServiceName": {
+			"referenceName": "azure_data_lake_ls",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "source_file_name"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "covid19_data_file_list.json",
+				"folderPath": "list_of_files",
+				"fileSystem": "raw"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"sourceBaseURL": {
+					"type": "string"
+				},
+				"sourceRelativeURL": {
+					"type": "string"
+				},
+				"sinkFileName": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

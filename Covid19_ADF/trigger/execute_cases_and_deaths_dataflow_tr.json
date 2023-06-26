@@ -1,0 +1,35 @@
+{
+	"name": "execute_cases_and_deaths_dataflow_tr",
+	"properties": {
+		"description": "As the name suggests this trigger will execute a pipeline that will process the cases_and_deaths.csv file and will save it into processed container.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipeline": {
+			"pipelineReference": {
+				"referenceName": "execute_cases_and_deaths_dataflow",
+				"type": "PipelineReference"
+			}
+		},
+		"type": "TumblingWindowTrigger",
+		"typeProperties": {
+			"frequency": "Hour",
+			"interval": 24,
+			"startTime": "2023-06-23T00:00:00Z",
+			"delay": "00:00:00",
+			"maxConcurrency": 50,
+			"retryPolicy": {
+				"intervalInSeconds": 30
+			},
+			"dependsOn": [
+				{
+					"type": "TumblingWindowTriggerDependencyReference",
+					"offset": "0.00:00:00",
+					"referenceTrigger": {
+						"referenceName": "ingest_data_to_raw_tr",
+						"type": "TriggerReference"
+					}
+				}
+			]
+		}
+	}
+}

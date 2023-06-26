@@ -1,0 +1,35 @@
+{
+	"name": "insert_weekly_hospital_count_to_db",
+	"properties": {
+		"description": "this trigger fires the pipeline that inserts the processed_weekly_hopital_count to a database table covid_19_schema.weekly_hospital_count.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipeline": {
+			"pipelineReference": {
+				"referenceName": "insert_weekly_hospital_count_to_db",
+				"type": "PipelineReference"
+			}
+		},
+		"type": "TumblingWindowTrigger",
+		"typeProperties": {
+			"frequency": "Hour",
+			"interval": 24,
+			"startTime": "2023-06-23T00:00:00Z",
+			"delay": "00:00:00",
+			"maxConcurrency": 50,
+			"retryPolicy": {
+				"intervalInSeconds": 30
+			},
+			"dependsOn": [
+				{
+					"type": "TumblingWindowTriggerDependencyReference",
+					"offset": "0.00:00:00",
+					"referenceTrigger": {
+						"referenceName": "execute_hospital_admission_dataflow_tr",
+						"type": "TriggerReference"
+					}
+				}
+			]
+		}
+	}
+}

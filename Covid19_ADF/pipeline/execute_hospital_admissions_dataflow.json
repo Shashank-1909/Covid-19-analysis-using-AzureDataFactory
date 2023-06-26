@@ -1,0 +1,42 @@
+{
+	"name": "execute_hospital_admissions_dataflow",
+	"properties": {
+		"activities": [
+			{
+				"name": "pl_execute_hospital_admission_dataflow",
+				"description": "This pipeline executes the process_hospital_admissions_file dataflow",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "process_hospital_admissions_file",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "None",
+					"runConcurrently": true,
+					"cacheSinks": {
+						"firstRowOnly": true
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "execute_dataflow"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-22T07:29:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

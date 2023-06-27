@@ -1,5 +1,10 @@
 {
 	"name": "covid19projectadf1",
+	"properties": {
+		"globalConfigurations": {
+			"PolicyValidationEnabled": "true"
+		}
+	},
 	"location": "centralindia",
 	"identity": {
 		"type": "SystemAssigned",
